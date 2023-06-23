@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "pandaset-utils"
+name = "labelme-to-annofab"
 version = "0.1.0"
-description = "'pandaset'データセットに関するスクリプト"
+description = "アノテーションツールLabelMeのアノテーションをAnnofabフォーマットに変換するツールです。"
 authors = ["Kurusugawa Computer Inc."]
 packages = [
-    { include = "pandasetutils" }
+    { include = "labelmeannofab" }
 ]
 readme="README.md"
-repository="https://github.com/kurusugawa-computer/pandaset-utils"
+repository="https://github.com/kurusugawa-computer/labelme-to-annofab"
 classifiers = [
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
@@ -19,6 +19,8 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.11"
 pillow = "*"
+annofabapi = "*"
+numpy = "*"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7"

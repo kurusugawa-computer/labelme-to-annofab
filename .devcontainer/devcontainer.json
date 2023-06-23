@@ -23,15 +23,13 @@
 	"runArgs": [
 		"--init",
 		"--net=host",
-		"--env=ANNOFAB_USER_ID",
-		"--env=ANNOFAB_PASSWORD"
 	],
 	"containerEnv": {
 		"CONTAINER_WORKSPACE": "${containerWorkspaceFolder}",
 		"LOCAL_WORKSPACE": "${localWorkspaceFolder}"
 	},
-	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/annofab-cli,type=bind,consistency=cached",
-	"workspaceFolder": "/workspaces/annofab-cli",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/labelme-to-annofab,type=bind,consistency=cached",
+	"workspaceFolder": "/workspaces/labelme-to-annofab",
 	"postStartCommand": "poetry install",
 	"customizations": {
 		"vscode": {

@@ -1,5 +1,5 @@
 ifndef SOURCE_FILES
-	export SOURCE_FILES:=pandasetutils
+	export SOURCE_FILES:=labelmeannofab
 endif
 ifndef TEST_FILES
 	export TEST_FILES:=tests
@@ -24,4 +24,4 @@ lint:
 
 test:
 	# 並列実行してレポートも出力する
-	poetry run pytest -n auto  --cov=kci --cov-report=html tests
+	poetry run pytest tests
