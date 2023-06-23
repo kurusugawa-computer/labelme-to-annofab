@@ -1,0 +1,2 @@
+# labelme-to-annofab
+アノテーションツールLabelMe(やAnyLabeling)のJSONフォーマットをAnnofabのアノテーションフォーマットに変換するツールです。
