@@ -4,6 +4,7 @@ import logging
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from pathlib import Path
 from typing import Any
+
 from PIL import Image, ImageDraw
 
 from labelmeannofab.common.utils import set_logger
@@ -14,7 +15,6 @@ logger = logging.getLogger(__name__)
 def create_segmentation_masks(labelme_shapes: list[dict[str, Any]], output_png: Path, image_height: int, image_width: int):
     image = Image.new(mode="RGBA", size=(image_width, image_height), color=(0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
-
 
     for shape in labelme_shapes:
         color = (255, 255, 255, 255)

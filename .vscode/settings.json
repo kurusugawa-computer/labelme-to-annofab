@@ -40,7 +40,7 @@
         "docs/**/*.py"
     ],
     "python.analysis.extraPaths": [
-        ".venv/lib/python3.8/site-packages/"
+        ".venv/lib/python3.11/site-packages/"
     ],
     "python.analysis.completeFunctionParens": true,
     "[python]": {
