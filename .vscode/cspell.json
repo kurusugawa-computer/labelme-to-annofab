@@ -27,7 +27,6 @@
         "labelme",
         "nargs",
         "noqa",
-        "pandaset",
         "popen",
         "pylint",
         "semseg",

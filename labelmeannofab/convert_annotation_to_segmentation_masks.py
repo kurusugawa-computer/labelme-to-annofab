@@ -1,6 +1,7 @@
 import argparse
-import copy
+import json
 import logging
+import uuid
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from pathlib import Path
 from typing import Any
@@ -12,110 +13,87 @@ from labelmeannofab.common.utils import set_logger
 logger = logging.getLogger(__name__)
 
 
-def create_segmentation_masks(labelme_shapes: list[dict[str, Any]], output_png: Path, image_height: int, image_width: int):
+def write_segmentation_masks(labelme_shapes: list[dict[str, Any]], output_png: Path, image_height: int, image_width: int) -> None:
     image = Image.new(mode="RGBA", size=(image_width, image_height), color=(0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
 
     for shape in labelme_shapes:
         color = (255, 255, 255, 255)
         points = shape["points"]
-        if shape["shape_type"] == "polygon":
+        shape_type = shape["shape_type"]
+        if shape_type == "polygon":
             xy = [(e[0], e[1]) for e in points]
             draw.polygon(xy, fill=color)
-        elif shape["shape_type"] == "rectangle":
+        elif shape_type == "rectangle":
             xy = [([0][0], points[0][1]), (points[1][0], points[1][1])]
             draw.rectangle(xy, fill=color)
+        else:
+            logger.warning(f"{shape_type=}であるアノテーションはAnnofabのマスク画像に変換できません。 :: lable={shape['label']}")
+            continue
 
     with output_png.open("wb") as f:
         image.save(f, format="PNG")
 
 
-def convert_annotation_json(labelme_json: Path, output_dir: Path, semantic_segmentation_labels: list[str] | None | None = None) -> None:
+def convert_annotation_json(labelme_json: Path, output_dir: Path, semantic_segmentation_labels: list[str]) -> None:
     """
-        labelmeのアノテーションJSONを、Annofabのフォーマットに変換します。
-
-    {
-        "details": [
-            {
-                "label": "car",
-                "data": {
-                    "left_top": {
-                        "x": 878,
-                        "y": 566
-                    },
-                    "right_bottom": {
-                        "x": 1065,
-                        "y": 701
-                    },
-                    "_type": "BoundingBox"
-                },
-                "attributes": {}
-            },
-            {
-                "label": "road",
-                "data": {
-                    "data_uri": "b803193f-827f-4755-8228-e2c67d0786d9",
-                    "_type": "SegmentationV2"
-                },
-                "attributes": {}
-            },
-            {
-                "label": "weather",
-                "data": {
-                    "_type": "Classification"
-                },
-                "attributes": {
-                    "sunny": true
-                }
-            }
-        ]
-    }
+    labelmeのアノテーションJSONを、Annofabのフォーマットに変換します。
 
     """
     with labelme_json.open() as f:
         labelme_annotation = json.load(f)
 
     shapes = labelme_annotation["shapes"]
+    # TODO: slashが含まれていたら、なにかに変換する
+    input_data_id = labelme_annotation["imagePath"]
+    image_width = labelme_annotation["imageWidth"]
+    image_height = labelme_annotation["imageHeight"]
+
+    input_data_dir = output_dir / input_data_id
+    input_data_dir.mkdir(exist_ok=True, parents=True)
+
+    annofab_details: list[dict[str, Any]] = []
     for semantic_segmentation_label in semantic_segmentation_labels:
-        [e for e in shapes if e["label"] == semantic_segmentation_label]
+        tmp_shapes = [e for e in shapes if e["label"] == semantic_segmentation_label]
 
-    dataset = DataSet(str(input_dir))
-    _sequence_id_list = sequence_id_list if sequence_id_list is not None else dataset.sequences()
+        annotation_id = str(uuid.uuid4())
 
-    dataset_accessor = DataSetAccessor(dataset)
+        annofab_detail = {
+            "label": semantic_segmentation_label,
+            "annotation_id": annotation_id,
+            "data": {"data_uri": annotation_id, "_type": "SegmentationV2"},
+        }
 
-    data: list[dict[str, Any]] = []
-    for sequence_id in _sequence_id_list:
-        logger.debug(f"{sequence_id=} :: cuboidのlabelごとのオブジェクト数を取得します。")
+        write_segmentation_masks(tmp_shapes, output_png=input_data_dir / annotation_id, image_height=image_height, image_width=image_width)
+        annofab_details.append(annofab_detail)
 
+    annofab_annotation: dict[str, Any] = {"details": annofab_details}
+    with (output_dir / f"{input_data_id}.json").open("w", encoding="utf-8") as f:
+        json.dump(annofab_annotation, f, ensure_ascii=False)
+
+
+def convert_annotation(input_dir: Path, output_dir: Path, *, semantic_segmentation_labels: list[str]) -> None:
+    success_count = 0
+    total_count = 0
+    logger.info(f"{input_dir}のlabelmeのアノテーションJSONを、Annofabフォーマットに変換して{output_dir}に出力します。")
+    for labelme_json in input_dir.glob("*.json"):
+        total_count += 1
         try:
-            cuboid_counts_list = dataset_accessor.get_cuboid_counts_list(sequence_id)
-            for cuboid_counts in cuboid_counts_list:
-                tmp: dict[str, Any] = copy.deepcopy(cuboid_counts.counts)
-                tmp["frame_no"] = cuboid_counts.frame_no
-                tmp["sequence_id"] = cuboid_counts.sequence_id
-                data.append(tmp)
+            logger.info(f"{labelme_json}のlabelmeのアノテーションJSONを変換します。")
+            convert_annotation_json(labelme_json, output_dir, semantic_segmentation_labels)
+            success_count += 1
         except Exception:
-            logger.warning(f"{sequence_id=} :: labelごとのオブジェクト数の取得に失敗しました。", exc_info=True)
+            logger.warning(f"{labelme_json} の変換に失敗しました。", exc_info=True)
             continue
 
-    df = pandas.DataFrame(data)
-    df = df.fillna(0)
-    df = df.set_index(["sequence_id", "frame_no"])
-
-    # columnを辞書順に並び替える
-    df = df[sorted(df.columns)]
-    return df
+    logger.info(f"{input_dir}のlabelmeのアノテーションJSONを、{success_count} / {total_count} 件変換しました。")
 
 
 def main() -> None:
     args = parse_args()
     set_logger()
 
-    df = create_cuboid_counts_dataframe(args.input_dir, args.sequence_id)
-    output_file = args.output
-    output_file.parent.mkdir(exist_ok=True, parents=True)
-    df.to_csv(str(output_file))
+    convert_annotation(args.input_dir, args.output_dir, semantic_segmentation_labels=args.semantic_segmentation_label)
 
 
 def parse_args() -> argparse.Namespace:
@@ -127,18 +105,18 @@ def parse_args() -> argparse.Namespace:
         ),
         formatter_class=ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("input_dir", type=Path, required=True, help="LabelMeのアノテーションJSONが存在するディレクトリ")
-    parser.add_argument("output_dir", type=Path, required=True, help="Annofabのアノテーションの出力先。")
+    parser.add_argument("input_dir", type=Path, help="LabelMeのアノテーションJSONが存在するディレクトリ")
+    parser.add_argument("output_dir", type=Path, help="Annofabのアノテーションの出力先。")
 
-    parser.add_argument(
-        "--json_filename", type=str, nargs="+", required=False, help="`input_dir`に存在するJSONの中で、変換対象のJSONを指定してください。"
-    )
-
+    # parser.add_argument(
+    #     "--json_filename", type=str, nargs="+", required=False, help="`input_dir`に存在するJSONの中で、変換対象のJSONを指定してください。"
+    # )
+    # TODO: insntance segmentationにも変換できるようにする
     parser.add_argument(
         "--semantic_segmentation_label",
         type=str,
         nargs="+",
-        required=False,
+        required=True,
         help="AnnofabのSemantic Segmentation用のマスク画像に変換するラベルを指定してください。",
     )
 

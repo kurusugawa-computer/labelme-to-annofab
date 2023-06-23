@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from labelmeannofab.convert_annotation_to_segmentation_masks import create_segmentation_masks
+from labelmeannofab.convert_annotation_to_segmentation_masks import write_segmentation_masks
 
 output_dir = Path("out")
 output_dir.mkdir(exist_ok=True, parents=True)
@@ -63,6 +63,6 @@ polygon_shapes = [
 ]
 
 
-def test__create_segmentation_masks():
-    create_segmentation_masks(polygon_shapes, output_dir / "segmentation_masks_polygon.png", image_height=1080, image_width=1920)
-    create_segmentation_masks(rectangle_shapes, output_dir / "segmentation_masks_rectangle.png", image_height=1080, image_width=1920)
+def test__write_segmentation_masks():
+    write_segmentation_masks(polygon_shapes, output_dir / "segmentation_masks_polygon.png", image_height=1080, image_width=1920)
+    write_segmentation_masks(rectangle_shapes, output_dir / "segmentation_masks_rectangle.png", image_height=1080, image_width=1920)
