@@ -44,8 +44,9 @@ def convert_annotation_json(labelme_json: Path, output_dir: Path, semantic_segme
         labelme_annotation = json.load(f)
 
     shapes = labelme_annotation["shapes"]
-    # TODO: slashが含まれていたら、なにかに変換する
-    input_data_id = labelme_annotation["imagePath"]
+    # 拡張子を除いた部分を入力データIDとする。
+    # 前提：スラッシュは含まれない
+    input_data_id = Path(labelme_annotation["imagePath"]).stem
     image_width = labelme_annotation["imageWidth"]
     image_height = labelme_annotation["imageHeight"]
 
@@ -58,10 +59,12 @@ def convert_annotation_json(labelme_json: Path, output_dir: Path, semantic_segme
 
         annotation_id = str(uuid.uuid4())
 
+        attributes = {}
         annofab_detail = {
             "label": semantic_segmentation_label,
             "annotation_id": annotation_id,
             "data": {"data_uri": annotation_id, "_type": "SegmentationV2"},
+            "attributes": attributes
         }
 
         write_segmentation_masks(tmp_shapes, output_png=input_data_dir / annotation_id, image_height=image_height, image_width=image_width)
@@ -119,6 +122,13 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="AnnofabのSemantic Segmentation用のマスク画像に変換するラベルを指定してください。",
     )
+
+    # parser.add_argument(
+    #     "--attribute_name_of_group_id",
+    #     type=str,
+    #     default="group_id",
+    #     help="Group IDをattributesに設定する際の名前を指定してください。",
+    # )
 
     return parser.parse_args()
 
