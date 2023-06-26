@@ -7,7 +7,8 @@ VSCode devcontainerを起動して、開発環境を構築してください。
 
 # 使い方
 
-lablemeのlabel'car','bike'であるオブジェクトを、Annofabの塗りつぶしアノテーションに変換します。
+## convert_annotation_to_segmentation_masks.py
+lablemeのlabel'car','bike'であるオブジェクトを、Annofabの塗りつぶしアノテーション（Semantic Segmentation用）に変換します。
 
 
 ```
