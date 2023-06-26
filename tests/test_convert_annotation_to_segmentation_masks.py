@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from labelmeannofab.convert_annotation_to_segmentation_masks import write_segmentation_masks
 
