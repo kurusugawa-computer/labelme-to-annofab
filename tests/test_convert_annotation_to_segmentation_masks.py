@@ -1,13 +1,16 @@
 from pathlib import Path
+from typing import Any
 
 from labelmeannofab.convert_annotation_to_segmentation_masks import write_segmentation_masks
 
 output_dir = Path("out")
 output_dir.mkdir(exist_ok=True, parents=True)
 
-rectangle_shapes = [{"label": "white-knight", "points": [[128.5, 44.0], [168.5, 110.5]], "group_id": None, "shape_type": "rectangle", "flags": {}}]
+rectangle_shapes: list[dict[str, Any]] = [
+    {"label": "white-knight", "points": [[128.5, 44.0], [168.5, 110.5]], "group_id": None, "shape_type": "rectangle", "flags": {}}
+]
 
-polygon_shapes = [
+polygon_shapes: list[dict[str, Any]] = [
     {
         "label": "car",
         "text": "",

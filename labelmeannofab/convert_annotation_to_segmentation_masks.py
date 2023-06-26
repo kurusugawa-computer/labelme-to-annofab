@@ -59,12 +59,12 @@ def convert_annotation_json(labelme_json: Path, output_dir: Path, semantic_segme
 
         annotation_id = str(uuid.uuid4())
 
-        attributes = {}
+        attributes: dict[str, Any] = {}
         annofab_detail = {
             "label": semantic_segmentation_label,
             "annotation_id": annotation_id,
             "data": {"data_uri": annotation_id, "_type": "SegmentationV2"},
-            "attributes": attributes
+            "attributes": attributes,
         }
 
         write_segmentation_masks(tmp_shapes, output_png=input_data_dir / annotation_id, image_height=image_height, image_width=image_width)
