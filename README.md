@@ -2,6 +2,8 @@
 アノテーションツールLabelMe(やAnyLabeling)のJSONフォーマットをAnnofabのアノテーションフォーマットに変換するツールです。
 
 
+# 事前準備
+VSCode devcontainerを起動して、開発環境を構築してください。
 
 # 使い方
 
